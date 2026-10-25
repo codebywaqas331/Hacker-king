@@ -1,121 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { LicenseDetails, SignalItem, AppConfig } from '../types.ts';
-import { saveSignalToFirestore, fetchSignalsFromFirestore, saveLicenseToFirestore } from '../services/firebaseDb.ts';
+import { saveSignalToFirestore, fetchSignalsFromFirestore } from '../services/firebaseDb.ts';
 
-const BUILT_IN_KEYS_SYNC: LicenseDetails[] = [
-  {
-    id: 'lic_king_crown_001',
-    license_key: 'FRK-VIP-LIFETIME-KING',
-    full_name: 'Waqas King (VIP Master)',
-    phone: '+966554573612',
-    email: 'codewithwaqas.dev@gmail.com',
-    amount: 'VIP Crown Sponsor',
-    status: 'approved',
-    duration_label: 'Lifetime',
-    expires_at: null,
-    lifetime: true,
-    max_devices: 10,
-    license_devices: [],
-  },
-  {
-    id: 'lic_master_001',
-    license_key: 'FRK-PRO-MASTER-KEY-2026',
-    full_name: 'VIP Master Admin',
-    phone: '+966554573612',
-    email: 'emailwaqas7@gmail.com',
-    amount: 'VIP Master Key',
-    status: 'approved',
-    duration_label: 'Lifetime',
-    expires_at: null,
-    lifetime: true,
-    max_devices: 10,
-    license_devices: [],
-  },
-  {
-    id: 'lic_1year_crown_8820',
-    license_key: 'FRK-CROWN-1YEAR-8820',
-    full_name: 'Elite Crown Trader',
-    phone: '+966554573612',
-    email: 'client@frkings.pro',
-    amount: '350 USD',
-    status: 'approved',
-    duration_label: '1 Year',
-    expires_at: new Date(Date.now() + 365 * 86400000).toISOString(),
-    lifetime: false,
-    max_devices: 5,
-    license_devices: [],
-  },
-  {
-    id: 'lic_elite_6m_5531',
-    license_key: 'FRK-ELITE-6M-5531',
-    full_name: 'Sultan Elite Pro',
-    phone: '+966554573612',
-    email: 'sultan.trader@gmail.com',
-    amount: '180 USD',
-    status: 'approved',
-    duration_label: '6 Months',
-    expires_at: new Date(Date.now() + 180 * 86400000).toISOString(),
-    lifetime: false,
-    max_devices: 3,
-    license_devices: [],
-  },
-  {
-    id: 'lic_pro_3m_4419',
-    license_key: 'FRK-PRO-3M-4419',
-    full_name: 'Waqas Pro Trader',
-    phone: '+966554573612',
-    email: 'codewithwaqas.dev@gmail.com',
-    amount: '100 USD',
-    status: 'approved',
-    duration_label: '3 Months',
-    expires_at: new Date(Date.now() + 90 * 86400000).toISOString(),
-    lifetime: false,
-    max_devices: 3,
-    license_devices: [],
-  },
-  {
-    id: 'lic_gold_1m_7720',
-    license_key: 'FRK-GOLD-1M-7720',
-    full_name: 'Quotex Gold Trader',
-    phone: '+966554573612',
-    email: 'gold.trader@gmail.com',
-    amount: '50 USD',
-    status: 'approved',
-    duration_label: '1 Month',
-    expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
-    lifetime: false,
-    max_devices: 2,
-    license_devices: [],
-  },
-  {
-    id: 'lic_alpha_1m_9932',
-    license_key: 'FRK-ALPHA-1M-9932',
-    full_name: 'Alpha Scalper Max',
-    phone: '+966554573612',
-    email: 'alpha.scalper@gmail.com',
-    amount: '50 USD',
-    status: 'approved',
-    duration_label: '1 Month',
-    expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
-    lifetime: false,
-    max_devices: 2,
-    license_devices: [],
-  },
-  {
-    id: 'lic_trial_3days_01',
-    license_key: 'FRK-TRIAL-3DAYS-01',
-    full_name: 'VIP 3-Day Trial User',
-    phone: '+966554573612',
-    email: 'trial.user@gmail.com',
-    amount: 'Free Trial',
-    status: 'approved',
-    duration_label: '3 Days',
-    expires_at: new Date(Date.now() + 3 * 86400000).toISOString(),
-    lifetime: false,
-    max_devices: 1,
-    license_devices: [],
-  },
-];
+// All license keys are dynamic — created via /api/register-key or /api/admin/create-key.
+// No hardcoded keys are seeded on the client.
 
 interface BotContextType {
   currentRoute: string;
@@ -190,11 +78,6 @@ export const BotProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     refreshConfig();
 
-    // Background sync pre-built VIP keys to Firestore cloud database
-    BUILT_IN_KEYS_SYNC.forEach((lic) => {
-      saveLicenseToFirestore(lic).catch(() => {});
-    });
-
     // Fetch persisted signals from server
     fetch('/api/signals')
       .then((res) => res.json())
@@ -241,15 +124,7 @@ export const BotProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }
         })
         .catch(() => {
-          const matched = BUILT_IN_KEYS_SYNC.find(
-            (b) => b.license_key.toUpperCase() === savedKey.toUpperCase()
-          );
-          if (matched) {
-            setActiveLicense(savedKey);
-            setLicenseDetails(matched);
-          } else {
-            setActiveLicense(savedKey);
-          }
+          setActiveLicense(savedKey);
         })
         .finally(() => {
           setIsVerifying(false);
